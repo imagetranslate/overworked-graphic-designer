@@ -1,0 +1,6 @@
+annoy
+pillow
+tqdm
+wcag-contrast-ratio
+requests
+bs4
