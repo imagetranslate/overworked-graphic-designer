@@ -37,11 +37,12 @@ It should have diverse:
 
 ## Schema
 
-Every image in the dataset has this schema
+API response for `/generate` endpoint
 
 ```json
 {
-    "image": "path-to-image",
+    "image": "base64-encoded-png",
+    "mask": "base64-encoded-png",
     "text_value": "hello",
     "text_color": "#13EEF0",
     "font_face": "Helvetica Neue",
@@ -49,26 +50,38 @@ Every image in the dataset has this schema
     "italicization": false,
     "weight": 400,
     "script": "Latin",
-    "language": "English",
-    "text_mask": "path-to-text-mask"
+    "language": "English"
 }
 ```
 
 Details of each attribute:
 
-- `image` holds path to the actual data file
-- `text_value` holds the text rendered.
+- `image` holds base64 string of the image PNG.
+- `mask` holds base64 string of the mask PNG.
+- `text` holds the text rendered.
 - `text_color` is color as hex string.
 - `font_face` holds font-face as Google Fonts names it
 - `category` can be one of `SERIF`, `SANS-SERIF`, `HANDWRITING`, `DISPLAY`, `MONOSPACE`
 - `italicization` is obvious
 - `weight` is as reported by Google Fonts. We need to quantize it later.
 - `script` should be one from the scripts of languages we support
-- `languages` should be be one from the languages we support
-- `text_mask` holds path to image where only the text is stored in white on black background.
+- `language` should be be one from the languages we support
 
 
-TODO
+## How to decode base 64 on client side
 
-- Add proper assets
-- Add API interface
+```python
+import requests
+import base64
+from io import BytesIO
+from PIL import Image
+
+response = requests.get("http://localhost:8000/generate")
+
+if response.status_code == 200:
+    response = response.json()
+    image = Image.open(BytesIO(base64.b64decode(response["image"])))
+    mask = Image.open(BytesIO(base64.b64decode(response["mask"])))
+
+
+```

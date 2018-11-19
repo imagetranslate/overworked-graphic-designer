@@ -4,3 +4,4 @@ tqdm
 wcag-contrast-ratio
 requests
 bs4
+flask

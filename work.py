@@ -11,15 +11,25 @@ import wcag_contrast_ratio as contrast
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from scipy.stats import mode
+from pprint import pprint
+import base64
+from io import BytesIO
 
-ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
+ASSETS_DIR = "assets"
 
 BACKGROUNDS = []
 FONTS = defaultdict(list) # Script names are keys
 WORDS = defaultdict(list) # Script names are keys
 COLOR_INDEX = AnnoyIndex(3, metric="euclidean")
 COLOR_COMBINATIONS = {}
+
+GENERATED_IMAGES_DIR = "generated_images"
+SAVE_IMAGES_TO_DISK = False
+
+# Just create the directory if it doesn't exist
+if not os.path.exists(GENERATED_IMAGES_DIR):
+    os.mkdir(GENERATED_IMAGES_DIR, Warning)
+
 
 def load_assets():    
     print("Loading assets")
@@ -52,6 +62,7 @@ def load_assets():
         for script in font_info["subsets"]:
             for font in font_info["fonts"]:
                 font["font_path"] = os.path.join(FONTS_DIR, font_info["files_path"], font["filename"])
+                font["category"] = font_info["category"]
                 FONTS[script].append(font)
                 total_fonts += 1
     print("Loaded {} fonts across {} scripts\n\n".format(total_fonts, len(FONTS)))
@@ -65,14 +76,18 @@ def load_assets():
 
     for script_filename in tqdm(os.listdir(SCRIPTS_DIR)):
         script_filepath = os.path.join(SCRIPTS_DIR, script_filename)
+        WORDS[script_filename] = {}
+
         for lang_filename in os.listdir(script_filepath):
+            WORDS[script_filename][lang_filename] = []
             lang_filepath = os.path.join(script_filepath, lang_filename)
+            
             with io.open(lang_filepath) as f:
                 for word in f:
                     word = word.strip()
                     if len(word) == 0 or len(word) > 30:
                         continue
-                    WORDS[script_filename].append(word)
+                    WORDS[script_filename][lang_filename].append(word)
                     total_words += 1
     print("Loaded {} words across {} scripts\n\n".format(total_words, len(WORDS)))
 
@@ -140,7 +155,8 @@ def shuffle_assets():
     
     global WORDS
     for script in WORDS:
-        random.Random().shuffle(WORDS[script])
+        for language in WORDS[script]:
+            random.Random().shuffle(WORDS[script][language])
 
 def generate_random_payload():
     payload = {}
@@ -148,19 +164,22 @@ def generate_random_payload():
     # Pick a random background
     payload["background_path"] = random.choice(BACKGROUNDS)
 
-    # Pick a random script
+    # Pick a random script and a random language in it
     payload["script"] = random.choice(["latin", "devanagari", "arabic", "cyrillic"])
-
+    available_languages = [x for x in WORDS[payload["script"]].keys()]
+    payload["language"] = random.choice(available_languages)
+    
     # Pick a random font
     payload["font"] = random.choice(FONTS[payload["script"]])
 
     # Pick a random word
-    payload["word"] = random.choice(WORDS[payload["script"]]) + random.choice([" ", "\n"]) + random.choice(WORDS[payload["script"]])
+    payload["word"] = random.choice(WORDS[payload["script"]][payload["language"]]) + random.choice([" ", "\n"]) + random.choice(WORDS[payload["script"]][payload["language"]])
 
     return payload
 
 def get_suitable_text_color(image, mask):
 
+    # Find the most common color in the image which this text is covering
     image_np = np.array(image)
     mask_np = np.array(mask)
     text_overlay_np = image_np & mask_np
@@ -168,6 +187,8 @@ def get_suitable_text_color(image, mask):
     useful_pixel_locations = np.nonzero(text_overlay_np)
     pixel_values = image_np[useful_pixel_locations[:-1]]//4*4 # Smoothing
 
+    color = mode(pixel_values).mode[0]
+    color = tuple([x/255 for x in color])
 
 
     # width, height = image.size
@@ -184,17 +205,16 @@ def get_suitable_text_color(image, mask):
 
     # Pick a random color
     # color = random.choice(colors)
-    color = mode(pixel_values).mode[0]
-    color = tuple([x/255 for x in color])
-
-    # See which 3 colors are closest to this color from the palettes we have.
+    
+    # See which 10 colors are closest to this color from the palettes we have.
     global COLOR_INDEX
-    closest_colors_from_palettes = COLOR_INDEX.get_nns_by_vector(color, 3)
+    closest_colors_from_palettes = COLOR_INDEX.get_nns_by_vector(color, 10)
     closest_colors = [COLOR_INDEX.get_item_vector(x) for x in closest_colors_from_palettes]
 
-    # Get text colors for each of them and choose one randomly
+    # Get text colors for each of them and choose the one with the highest contrast
     text_colors = [COLOR_COMBINATIONS[rgb_to_hex(x)] for x in closest_colors]
-    text_color = random.choice(text_colors)
+    text_color = text_colors[np.argmax([contrast.rgb(color,hex_to_rgb(x)) for x in text_colors])]
+    # text_color = random.choice(text_colors)
 
     return text_color
 
@@ -204,13 +224,13 @@ def rgb_to_hex(color):
 
 def generate_image_from_payload(payload):
 
-    background = Image.open(payload["background_path"])
+    background = Image.open(payload["background_path"]).convert('RGB')
     width, height = background.size
     padding = min(50, width/10)
 
     # Choose a font size. Reduce till text box is likely to fit in the background
-    divisor = 5
-    padding = 0
+    divisor = random.choice([5,7,10])
+    padding = 30
     while(True):
         font_size = height//divisor
         font_object = ImageFont.truetype(payload["font"]["font_path"], font_size)
@@ -232,58 +252,75 @@ def generate_image_from_payload(payload):
     # Draw onto black image as a mask
     mask = Image.new('RGB', (roi.width, roi.height), color="#000000")
     draw_pad = ImageDraw.Draw(mask)
-    draw_pad.text((0, 0), payload["word"], font=font_object, fill="#FFFFFF")
+    draw_pad.text((padding, padding/4), payload["word"], font=font_object, fill="#FFFFFF")
 
     # Get suitable text color
     text_color = get_suitable_text_color(roi, mask)
     
     # Draw onto image
     draw_pad = ImageDraw.Draw(roi)
-    draw_pad.text((0, 0), payload["word"], font=font_object, fill=text_color)
+    draw_pad.text((padding, padding/4), payload["word"], font=font_object, fill=text_color)
 
+    global SAVE_IMAGES_TO_DISK
+    if SAVE_IMAGES_TO_DISK:
+        filename = "%s.png" % (uuid.uuid4())
+        filepath = os.path.join(GENERATED_IMAGES_DIR, filename)
+        roi.save(filepath)
     
+        mask_filepath = "{}-mask.png".format(filepath[:-4])
+        mask.save(mask_filepath)
+    else:
+        filepath = None
+        mask_filepath = None
 
-    filename = "%s.png" % (uuid.uuid4())
-    filepath = os.path.join("/home/harsha/Desktop/samples", filename)
-    roi.save(filepath)
-    mask.save("{}-mask.png".format(filepath[:-4]))
+    roi_buffered = BytesIO()
+    roi.save(roi_buffered, format="PNG")
 
-    print("Generated {}".format(filepath), end="\r")
+    mask_buffered = BytesIO()
+    mask.save(mask_buffered, format="PNG")
 
     return {
-        "image_path": filepath,
-        "text_color": text_color
+        "text_color": text_color,
+        "image": base64.b64encode(roi_buffered.getvalue()),
+        "mask": base64.b64encode(mask_buffered.getvalue()),
+        "image_filepath": filepath,
+        "mask_filepath": mask_filepath
     }    
 
+def generate_data():
+    try:
+        payload = generate_random_payload()
+        image = generate_image_from_payload(payload)
+
+        output = {
+            "image": image["image"],
+            "mask": image["mask"],
+            "text": payload["word"],
+            "text_color": image["text_color"],
+            "font_face": payload["font"]["full_name"],
+            "category": payload["font"]["category"],
+            "italicization": payload["font"]["style"] == "italic",
+            "weight": int(payload["font"]["weight"]),
+            "script": payload["script"],
+            "language": payload["language"],
+
+            "image_filepath": image["image_filepath"],
+            "mask_filepath": image["mask_filepath"]
+        }
+
+    except Exception:
+        return generate_data()
     
+    return output
+    
+
 if __name__ == "__main__":
     
     load_assets()
-
     shuffle_assets()
 
+    SAVE_IMAGES_TO_DISK = True
     
-    for i in range(200):
-        try:
-            payload = generate_random_payload()
-            image = generate_image_from_payload(payload)
-        except Exception as e:
-            # print(e)
-            print("Failed\n")
-    
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
+    while(True):
+        output = generate_data()
+        print("Generated: ", output["image_filepath"])
