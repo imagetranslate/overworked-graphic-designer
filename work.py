@@ -9,6 +9,8 @@ from tqdm import tqdm
 from itertools import product
 import wcag_contrast_ratio as contrast
 from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+from scipy.stats import mode
 
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
@@ -157,21 +159,32 @@ def generate_random_payload():
 
     return payload
 
-def get_suitable_text_color(image):
-    width, height = image.size
+def get_suitable_text_color(image, mask):
+
+    image_np = np.array(image)
+    mask_np = np.array(mask)
+    text_overlay_np = image_np & mask_np
+
+    useful_pixel_locations = np.nonzero(text_overlay_np)
+    pixel_values = image_np[useful_pixel_locations[:-1]]//4*4 # Smoothing
+
+
+
+    # width, height = image.size
     
     # Make this smaller to reduce calculations
-    smaller_image = image.resize((300, int(height/(width/300))))
+    # smaller_image = image.resize((300, int(height/(width/300))))
 
     # Reduce total colors to simplify common color calculations
-    color_quantized_image = smaller_image.convert("P", palette=Image.ADAPTIVE, colors=256).convert("RGB")
+    # color_quantized_image = smaller_image.convert("P", palette=Image.ADAPTIVE, colors=256).convert("RGB")
     
     # Get top 3 most common colors
-    color_counter = Counter(color_quantized_image.getdata())
-    colors = [x[0] for x in color_counter.most_common(3)]
+    # color_counter = Counter(color_quantized_image.getdata())
+    # colors = [x[0] for x in color_counter.most_common(3)]
 
     # Pick a random color
-    color = random.choice(colors)
+    # color = random.choice(colors)
+    color = mode(pixel_values).mode[0]
     color = tuple([x/255 for x in color])
 
     # See which 3 colors are closest to this color from the palettes we have.
@@ -216,18 +229,19 @@ def generate_image_from_payload(payload):
     # Crop with random box values
     roi = background.crop((random_left, random_top, random_left + roi_width, random_top + roi_height))
 
-    # Get suitable text color
-    text_color = get_suitable_text_color(roi)
-    
-    # Draw onto image
-    draw_pad = ImageDraw.Draw(roi)
-    draw_pad.text((0, 0), payload["word"], font=font_object, fill=text_color)
-
     # Draw onto black image as a mask
     mask = Image.new('RGB', (roi.width, roi.height), color="#000000")
     draw_pad = ImageDraw.Draw(mask)
     draw_pad.text((0, 0), payload["word"], font=font_object, fill="#FFFFFF")
 
+    # Get suitable text color
+    text_color = get_suitable_text_color(roi, mask)
+    
+    # Draw onto image
+    draw_pad = ImageDraw.Draw(roi)
+    draw_pad.text((0, 0), payload["word"], font=font_object, fill=text_color)
+
+    
 
     filename = "%s.png" % (uuid.uuid4())
     filepath = os.path.join("/home/harsha/Desktop/samples", filename)
