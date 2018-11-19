@@ -193,18 +193,19 @@ def get_suitable_text_color(image, mask):
 
     # width, height = image.size
     
-    # Make this smaller to reduce calculations
+    # # Make this smaller to reduce calculations
     # smaller_image = image.resize((300, int(height/(width/300))))
 
-    # Reduce total colors to simplify common color calculations
+    # # Reduce total colors to simplify common color calculations
     # color_quantized_image = smaller_image.convert("P", palette=Image.ADAPTIVE, colors=256).convert("RGB")
     
-    # Get top 3 most common colors
+    # # Get top 3 most common colors
     # color_counter = Counter(color_quantized_image.getdata())
     # colors = [x[0] for x in color_counter.most_common(3)]
 
-    # Pick a random color
+    # # Pick a random color
     # color = random.choice(colors)
+    # color = tuple([x/255 for x in color])
     
     # See which 10 colors are closest to this color from the palettes we have.
     global COLOR_INDEX
@@ -214,8 +215,7 @@ def get_suitable_text_color(image, mask):
     # Get text colors for each of them and choose the one with the highest contrast
     text_colors = [COLOR_COMBINATIONS[rgb_to_hex(x)] for x in closest_colors]
     text_color = text_colors[np.argmax([contrast.rgb(color,hex_to_rgb(x)) for x in text_colors])]
-    # text_color = random.choice(text_colors)
-
+    
     return text_color
 
 def rgb_to_hex(color):
