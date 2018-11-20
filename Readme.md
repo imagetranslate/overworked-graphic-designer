@@ -33,8 +33,21 @@ It should have diverse:
 
 1. Backgrounds : Gather from Unsplash
 2. Foreground/Text color: Gather from user-generated palletes
-3. Scripts: Gather words from dictionaries
+3. Scripts: Gather words from wordlists
 4. Fonts: Gather from Google Fonts
+
+## Initial setup
+
+The assets folder has subdirectories to which you can add your own backgrounds, palettes and wordlists.
+
+For Google Fonts, clone their repo and copy the folder so that final folder structure looks like:
+
+- assets 
+    - fonts
+        - google-fonts
+            - apache
+            - ufl
+            - ofl
 
 ## Schema
 
