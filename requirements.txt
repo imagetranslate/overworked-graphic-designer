@@ -4,4 +4,6 @@ tqdm
 wcag-contrast-ratio
 requests
 bs4
-flask
+sanic
+numpy
+scipy

@@ -1,20 +1,18 @@
-# Overworked Graphic Designer - OGD
+# Overworked Graphic Designer
 
-For our business objectives, we need to solve the following problems related to text in images.
+## What purpose will this serve
 
-## Problems
+In images with text, besides recognizing it (which is what OCR does), there are other interesting things one can do. 
 
-Given an image with text in it:
-1. Identify text color
-2. Identify
-    - Font-face
-    - Italicization
-    - Weight
-3. Inpainting
-4. Recognize the text (we'll use OCR APIs for now)
+Say:
+- Identify character boundaries
+- Identify font used, it's weight, italicization etc
+- Identify text color
+- Still do OCR if you wish to
 
+Obviously gathering such a dataset isn't easy. But we can obviouly create one.
 
-## Diversity of input
+## Diversity of generated data
 
 We should be able to handle input that has diverse:
 
@@ -22,6 +20,9 @@ We should be able to handle input that has diverse:
 2. Foregrounds / Text colors
 3. Scripts
 4. Fonts
+
+## Something like this
+![collage](https://i.imgur.com/gYYVovp.png)
 
 
 ## Dataset creation
@@ -68,7 +69,19 @@ Details of each attribute:
 - `language` should be be one from the languages we support
 
 
-## How to decode base 64 on client side
+## How to run
+
+If you just want to create a lot of such images
+```sh
+python work.py
+```
+
+If you want to serve it as an API
+```sh
+python api.py
+```
+
+## How to decode API response on client side
 
 ```python
 import requests
