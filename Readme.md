@@ -10,26 +10,15 @@ Say:
 - Identify text color
 - Still do OCR if you wish to
 
-Obviously gathering such a dataset isn't easy. But we can obviouly create one.
-
-## Diversity of generated data
-
-We should be able to handle input that has diverse:
-
-1. Backgrounds
-2. Foregrounds / Text colors
-3. Scripts
-4. Fonts
+Obviously gathering such a dataset isn't easy. But we *can* create one.
 
 ## Something like this
+Each of these were generated
 ![collage](https://i.imgur.com/gYYVovp.png)
-
 
 ## Dataset creation
 
-We can create a common dataset to train models for each of the problems above.
-
-It should have diverse:
+Dataset should have diverse:
 
 1. Backgrounds : Gather from Unsplash
 2. Foreground/Text color: Gather from user-generated palletes
@@ -39,8 +28,6 @@ It should have diverse:
 ## Initial setup
 
 The assets folder has subdirectories to which you can add your own backgrounds, palettes and wordlists.
-
-
 
 For Google Fonts, clone their repo and copy the folder so that final folder structure looks like:
 
