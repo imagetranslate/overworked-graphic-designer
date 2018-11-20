@@ -40,6 +40,8 @@ It should have diverse:
 
 The assets folder has subdirectories to which you can add your own backgrounds, palettes and wordlists.
 
+
+
 For Google Fonts, clone their repo and copy the folder so that final folder structure looks like:
 
 - assets 
@@ -48,6 +50,8 @@ For Google Fonts, clone their repo and copy the folder so that final folder stru
             - apache
             - ufl
             - ofl
+
+And of course, do the obvious `pip install -r requirements.txt`
 
 ## Schema
 
