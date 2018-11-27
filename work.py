@@ -169,8 +169,6 @@ def generate_random_payload(filters={}):
     # Filter scripts if any
     available_scripts = filters.get("scripts", ["latin", "devanagari", "arabic", "cyrillic", "korean"])
     payload["script"] = random.choice(available_scripts)
-    print("ps ", payload["script"])
-    
 
     available_languages = [x for x in WORDS[payload["script"]].keys()]
     
@@ -198,8 +196,12 @@ def generate_random_payload(filters={}):
     payload["font"] = random.choice(available_fonts)
 
     # Pick a random word
-    payload["word"] = random.choice(WORDS[payload["script"]][payload["language"]]) + random.choice([" ", "\n"]) + random.choice(WORDS[payload["script"]][payload["language"]])
-
+    payload["word"] = random.choice(WORDS[payload["script"]][payload["language"]])
+    
+    # Add more words followed by new line or space with 50% probability
+    while(random.choice([0,1]) == 0):
+        payload["word"] += random.choice([" ", "\n"]) + random.choice(WORDS[payload["script"]][payload["language"]])
+    
     return payload
 
 def get_suitable_text_color(image, mask):

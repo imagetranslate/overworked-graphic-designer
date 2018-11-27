@@ -104,7 +104,7 @@ if response.status_code == 200:
 ## Directly using in you program without API
 
 - Clone this repo and copy `work.py` to your codebase.
-- Download [assets.tar]() and unzip in your root folder.
+- Download [assets.tar](https://drive.google.com/file/d/1cWShIF26rNnkXOZCh9GbLecyptSrrbHk/view?usp=sharing) and unzip in your root folder.
 
 
 ```python
