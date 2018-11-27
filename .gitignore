@@ -1,4 +1,5 @@
-assets/fonts/*
+assets/*
 generated_images/*
 .env
 .vscode
+

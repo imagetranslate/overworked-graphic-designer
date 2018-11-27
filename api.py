@@ -8,7 +8,14 @@ app = Sanic()
 @app.route('/generate')
 async def generate(request):
     
-    output = generate_data()
+    if request.args:
+        filters = {}
+        for arg in request.raw_args:
+            filters[arg] = request.raw_args[arg].split(",")
+    else:
+        filters = None
+
+    output = generate_data(filters)
     return json(output)
 
 

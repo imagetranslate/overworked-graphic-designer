@@ -158,19 +158,44 @@ def shuffle_assets():
         for language in WORDS[script]:
             random.Random().shuffle(WORDS[script][language])
 
-def generate_random_payload():
+def generate_random_payload(filters):
     payload = {}
 
     # Pick a random background
     payload["background_path"] = random.choice(BACKGROUNDS)
 
     # Pick a random script and a random language in it
-    payload["script"] = random.choice(["latin", "devanagari", "arabic", "cyrillic"])
+    
+    # Filter scripts if any
+    available_scripts = filters.get("scripts", ["latin", "devanagari", "arabic", "cyrillic", "korean"])
+    payload["script"] = random.choice(available_scripts)
+    print("ps ", payload["script"])
+    
+
     available_languages = [x for x in WORDS[payload["script"]].keys()]
+    
+    # Filter languages if any
+    # available_languages = filters.get("languages", available_languages)
     payload["language"] = random.choice(available_languages)
     
-    # Pick a random font
-    payload["font"] = random.choice(FONTS[payload["script"]])
+    # Pick a random font with given filters
+    available_fonts = []
+    for font in FONTS[payload["script"]]:
+        # Filter weights if specified
+        if "weights" in filters and font["weight"] not in filters["weights"]:
+            continue
+
+        # Filter category if specified
+        if "categories" in filters and font["category"] not in filters["categories"]:
+            continue
+        
+        # Filter italicization if required
+        if "styles" in filters and font["style"] not in filters["styles"]:
+            continue
+
+        available_fonts.append(font)
+
+    payload["font"] = random.choice(available_fonts)
 
     # Pick a random word
     payload["word"] = random.choice(WORDS[payload["script"]][payload["language"]]) + random.choice([" ", "\n"]) + random.choice(WORDS[payload["script"]][payload["language"]])
@@ -287,9 +312,17 @@ def generate_image_from_payload(payload):
         "mask_filepath": mask_filepath
     }    
 
-def generate_data():
+def generate_data(filters):
+
     try:
-        payload = generate_random_payload()
+        payload = generate_random_payload(filters)
+    except Exception:
+        output = {
+            "message": "Please check your filters"
+        }
+        return output
+
+    try:
         image = generate_image_from_payload(payload)
 
         output = {
@@ -309,7 +342,7 @@ def generate_data():
         }
 
     except Exception:
-        return generate_data()
+        return generate_data(filters)
     
     return output
     
@@ -321,6 +354,16 @@ if __name__ == "__main__":
 
     SAVE_IMAGES_TO_DISK = True
     
+    filters = {}
+    filters = {
+        # "scripts": ["korean"],
+        # "weights": ["800"]
+        # "style": ["italic"]
+    }
+
     while(True):
-        output = generate_data()
-        print("Generated: ", output["image_filepath"])
+        output = generate_data(filters)
+        if "message" in output:
+            print(output)
+        else:
+            print("Generated: ", output["image_filepath"])
