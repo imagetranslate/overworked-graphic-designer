@@ -28,7 +28,7 @@ SAVE_IMAGES_TO_DISK = False
 
 # Just create the directory if it doesn't exist
 if not os.path.exists(GENERATED_IMAGES_DIR):
-    os.mkdir(GENERATED_IMAGES_DIR, Warning)
+    os.mkdir(GENERATED_IMAGES_DIR)
 
 
 def load_assets():    
@@ -158,7 +158,7 @@ def shuffle_assets():
         for language in WORDS[script]:
             random.Random().shuffle(WORDS[script][language])
 
-def generate_random_payload(filters):
+def generate_random_payload(filters={}):
     payload = {}
 
     # Pick a random background

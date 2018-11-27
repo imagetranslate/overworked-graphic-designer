@@ -99,6 +99,23 @@ if response.status_code == 200:
     response = response.json()
     image = Image.open(BytesIO(base64.b64decode(response["image"])))
     mask = Image.open(BytesIO(base64.b64decode(response["mask"])))
+```
+
+## Directly using in you program without API
+
+- Clone this repo and copy `work.py` to your codebase.
+- Download [assets.tar]() and unzip in your root folder.
 
 
+```python
+from work import load_assets, shuffle_assets, generate_data
+
+# Initialize assets
+load_assets()
+shuffle_assets()
+
+# Generate some data and decode as PIL images 
+output = generate_data()
+image = Image.open(BytesIO(base64.b64decode(response["image"])))
+mask = Image.open(BytesIO(base64.b64decode(response["mask"])))
 ```
