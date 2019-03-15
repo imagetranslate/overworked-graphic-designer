@@ -11,7 +11,7 @@ Say:
 - Train a GAN to remove text
 - Still do OCR if you wish to
 
-At ImageTranslate(https://www.imagetranslate.com?ref=github), we need such datasets often and that too in different languages and scripts.
+At [ImageTranslate](https://www.imagetranslate.com?ref=github), we need such datasets often and that too in different languages and scripts.
 Obviously gathering such a dataset isn't easy. But we *can* create one.
 
 ## Something like this
