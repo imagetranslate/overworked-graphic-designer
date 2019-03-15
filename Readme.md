@@ -14,21 +14,24 @@ Obviously gathering such a dataset isn't easy. But we *can* create one.
 
 ## Something like this
 Each of these were generated
+
 ![collage](https://i.imgur.com/gYYVovp.png)
 
 ## Dataset creation
 
 Dataset should have diverse:
 
-1. Backgrounds : Gather from Unsplash
-2. Foreground/Text color: Gather from user-generated palletes
-3. Scripts: Gather words from wordlists
-4. Fonts: Gather from Google Fonts
+1. Backgrounds : Gathered from Unsplash
+2. Foreground/Text color: Gathered from user-generated palletes
+3. Scripts: Gathered words from wordlists
+4. Fonts: Gathered from Google Fonts
 
 ## Initial setup
 
+You will need a sample [assets.tar](https://drive.google.com/file/d/14zzjid989dSKFLcLVOZuoj-K0IV1mwN_/view?usp=sharing) like this. Unzip it in your project folder.
 The assets folder has subdirectories to which you can add your own backgrounds, palettes and wordlists.
 
+Google fonts are excluded from the tar as it is a huge repo in itself.
 For Google Fonts, clone their repo and copy the folder so that final folder structure looks like:
 
 - assets 
@@ -104,7 +107,6 @@ if response.status_code == 200:
 ## Directly using in you program without API
 
 - Clone this repo and copy `work.py` to your codebase.
-- Download [assets.tar](https://drive.google.com/file/d/1cWShIF26rNnkXOZCh9GbLecyptSrrbHk/view?usp=sharing) and unzip in your root folder.
 
 
 ```python
@@ -119,3 +121,11 @@ output = generate_data()
 image = Image.open(BytesIO(base64.b64decode(response["image"])))
 mask = Image.open(BytesIO(base64.b64decode(response["mask"])))
 ```
+
+## What is happening behind the scenes
+
+- Lot of python random
+- Trasformations with the elegant PIL library
+- Euclidean space calculations for colors
+
+The code is rather simple to understand and annotated with ample comments if you're interested.
