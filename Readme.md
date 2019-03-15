@@ -2,9 +2,9 @@
 
 ## What purpose will this serve
 
-In images with text, besides recognizing it (which is what OCR does), there are other interesting things one can do. 
+In images with text, besides recognizing it (which is what OCR does), there are other interesting things one can do. This repo creates a lot of real-looking images and *also* generates their text masks.
 
-Say:
+You can use it to:
 - Identify character boundaries
 - Identify font used, it's weight, italicization etc
 - Identify text color
